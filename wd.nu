@@ -2,13 +2,12 @@ def warprc [] {$env.HOME | path join ".warprc"}
 
 def currentAliases [] {warprc | open | lines | split column ":" alias full_path}
 
-export def "wd add" [alias: string] {
+export def "add" [alias: string] {
     let currentRelativePath = $env.PWD | str replace $env.HOME ~;
     let newItem = [[alias full_path]; [$alias $currentRelativePath]];
     let newAliases = currentAliases | where alias != $alias | append $newItem;
-    print $newAliases;
     $newAliases | to csv -n -s ":" | save (warprc) -f;
-    print $"Warp added as ($alias)";
+    print $"(ansi green_bold)*(ansi reset) Warp (ansi green_bold)($alias)(ansi reset) added";
 }
 
 def wdAliases [] { currentAliases | get alias | sort }

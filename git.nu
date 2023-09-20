@@ -8,8 +8,6 @@ alias gcam = git commit --all --message
 
 def ggfl [] {
     let current = git rev-parse --abbrev-ref HEAD
-    print $current;
-    print $current | describe;
     git push --force-with-lease origin $current;
 }
 

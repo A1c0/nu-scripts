@@ -1,6 +1,6 @@
 def warprc [] {$env.HOME | path join ".warprc"}
 
-def currentAliases [] {warprc | open | lines | split column ":" alias full_path}
+def currentAliases [] {warprc | open | lines | split column ":" value description}
 
 export def "add" [alias: string] {
     let currentRelativePath = $env.PWD | str replace $env.HOME ~;
@@ -10,9 +10,9 @@ export def "add" [alias: string] {
     print $"(ansi green_bold)*(ansi reset) Warp (ansi green_bold)($alias)(ansi reset) added";
 }
 
-def wdAliases [] { currentAliases | get alias | sort }
+def "nu-complete wd" [] { currentAliases | sort-by value | each {|e| $e | into record} }
 
-export def-env main [alias: string@wdAliases] {
-    let full_path = currentAliases | where alias == $alias | get full_path | first;
-    cd $full_path;
+export def-env main [alias: string@"nu-complete wd"] {
+    let alias_relative_path = currentAliases | where value == $alias | get description | first
+    cd $alias_relative_path;
 }

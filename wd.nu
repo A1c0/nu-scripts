@@ -2,7 +2,10 @@ def warprc [] {$env.HOME | path join ".warprc"}
 
 def currentAliases [] {warprc | open | lines | split column ":" value description}
 
-export def "add" [alias: string] {
+# Create a warp point
+export def "add" [
+    alias: string # The alias for the current directory
+    ] {
     let currentRelativePath = $env.PWD | str replace $env.HOME ~;
     let newItem = [[alias full_path]; [$alias $currentRelativePath]];
     let newAliases = currentAliases | where alias != $alias | append $newItem;

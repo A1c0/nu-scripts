@@ -1,14 +1,26 @@
-alias gco = git checkout
+def git_current_branch [] {git rev-parse --abbrev-ref HEAD | str trim}
+
+
 alias gst = git status
-alias grhh = git reset --hard HEAD
-alias gaa = git add --all
+alias grhh = git reset --hard
 alias gfa = git fetch --all
-alias gcam = git commit --all --message 
 
+def gcam [msg: string] {git commit --all --message $msg}
 
-def ggfl [] {
-    let current = git rev-parse --abbrev-ref HEAD
-    git push --force-with-lease origin $current;
+def ggl [] {
+    let current = git_current_branch
+    git pull --rebase origin $current
 }
 
-alias groh = git reset --hard $"origin/(current_branch)"
+def ggfl [] {
+    let current = git_current_branch
+    git push --force-with-lease origin $current
+}
+
+def groh [] {
+    let current   = git_current_branch
+    git reset --hard $"origin/($current)"
+}
+
+alias gaa = git add --all 
+alias gco = git checkout

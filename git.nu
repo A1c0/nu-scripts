@@ -1,6 +1,5 @@
 def git_current_branch [] {git rev-parse --abbrev-ref HEAD | str trim}
 
-
 alias gst = git status
 alias grhh = git reset --hard
 alias gfa = git fetch --all
@@ -20,6 +19,18 @@ def ggfl [] {
 def groh [] {
     let current   = git_current_branch
     git reset --hard $"origin/($current)"
+}
+
+def gpsup [] {
+    let current   = git_current_branch
+    git push --set-upstream origin $current
+}
+
+def gstf [] {
+    let files_modified = gst -s | lines | split column ' ' --collapse-empty | rename flag name;
+    let files_modified_ls_info = $files_modified | get name | each {ls -l $in | first};
+
+    $files_modified | join $files_modified_ls_info name | select flag name created accessed modified;
 }
 
 alias gaa = git add --all 

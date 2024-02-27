@@ -26,4 +26,22 @@ def "yarn run" [script:string@npm_scripts, ...flags: string] {
     ^yarn run $script $flags
 }
 
+def all-npm-dependencies [] {
+    open package.json 
+    | select dependencies devDependencies 
+    | transpose group items 
+    | update items {|row| 
+        $row.items 
+        | transpose name version 
+        | insert isDev ($row.group == 'devDependencies')} 
+    | get items 
+    | flatten
+    | join (
+        git blame package.json 
+        | lines 
+        | parse -r '^[0-9a-z]+ [^ ]+\s+\((?<updatedBy>.*?)\s{2,}(?<updatedAt>\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2} \+\d+).*?"(?<name>[^"]+)' 
+        | update updatedAt {into datetime}
+    ) name
+}
+
 alias yr = yarn run

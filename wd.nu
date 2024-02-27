@@ -13,7 +13,7 @@ export def add [
     print $"(ansi green_bold)*(ansi reset) Warp (ansi green_bold)($alias)(ansi reset) added";
 }
 
-def "nu-complete wd" [] { currentAliases | sort-by value | prepend {value: "add", description: "Add a new warp point"}}
+def "nu-complete wd" [] { currentAliases | sort-by value | prepend {value: "add", description: "Create a warp point"}}
 
 export def --env main [alias: string@"nu-complete wd"] {
     let alias_relative_path = currentAliases | where value == $alias | get description | first

@@ -1,16 +1,12 @@
 def split-each [num:int] {
-    let $arr = $in;
-    let loop_i = $arr | length | $num mod $in | $in + 1;
-    mut i = 0;
-    mut res = [];
-    loop {
-        if $i == $loop_i {break};
-
-        let start = $i * $num;
-        let tmp = $arr | skip $start | take $num;
-        $res = ($res | append [$tmp]);
-
-        $i += 1;
+    let input = $in;
+    let loop_i = $input | length | $in / $num | math ceil;
+    mut arr = [];
+    mut i = 0; loop {
+        if $i == $loop_i { break };
+        let item = ($input | skip ($i * $num) | take $num)
+        $arr = ($arr | append [$item]);
+        $i = $i + 1;
     }
-    $res;
+    $arr;
 }

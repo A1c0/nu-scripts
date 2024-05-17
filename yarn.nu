@@ -59,27 +59,27 @@ def parseSemVer [version] {
     {major: (safeParseInt $parsed.major), minor: (safeParseInt $parsed.minor), patch: (safeParseInt $parsed.patch) }
 }
 
-def color-version [current: string, latest: string] {
+def compute-criticality [current: string, latest: string] {
     let current_parsed = parseSemVer $current 
     let latest_parsed = parseSemVer $latest;
 
     if ($current_parsed.major < $latest_parsed.major) {
         if ($latest_parsed.major - $current_parsed.major > 1) {
-            return $"(ansi purple_bold)($current)(ansi reset)"
+            return 3
         } else {
-            return $"(ansi red_bold)($current)(ansi reset)"
+            return 2
         }
     } else if ($current_parsed.minor != $latest_parsed.minor) {
-        return $"(ansi yellow_bold)($current)(ansi reset)"
+        return 1
     } else {
-        return $"(ansi green)($current)(ansi reset)"
+        return 0
     }
 }
 
 def all-npm-dependencies-with-latest [] {
     let dependencies = all-npm-dependencies;
     let latest_version = $dependencies | get name | par-each {|name| {name : $name, latest: (http get $"https://registry.npmjs.org/($name)" | | get dist-tags.latest) }}
-    $dependencies | join $latest_version name | update version {|row| color-version $row.version $row.latest};
+    $dependencies | join $latest_version name | insert criticality {|row| compute-criticality $row.version $row.latest};
 }
 
 alias yr = yarn run

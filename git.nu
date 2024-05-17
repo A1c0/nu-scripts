@@ -11,6 +11,11 @@ def ggl [] {
     git pull --rebase origin $current
 }
 
+def ggp [] {
+    let current = git_current_branch
+    git push origin $current
+}
+
 def ggfl [] {
     let current = git_current_branch
     git push --force-with-lease origin $current

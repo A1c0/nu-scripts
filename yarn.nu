@@ -23,7 +23,14 @@ def npm_scripts [] {
 }
 
 def "yarn run" [script:string@npm_scripts, ...flags: string] {
-    ^yarn run $script $flags
+    if ($flags | is-empty) {
+        ^yarn run $script;
+        return;
+    }
+    else {
+        ^yarn run $script $flags;
+        return;
+    }
 }
 
 def all-npm-dependencies [] {
@@ -36,12 +43,43 @@ def all-npm-dependencies [] {
         | insert isDev ($row.group == 'devDependencies')} 
     | get items 
     | flatten
-    | join (
-        git blame package.json 
+    | join -i (
+        git blame -c package.json 
         | lines 
-        | parse -r '^[0-9a-z]+ [^ ]+\s+\((?<updatedBy>.*?)\s{2,}(?<updatedAt>\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2} \+\d+).*?"(?<name>[^"]+)' 
+        | parse -r '^.*\t\((?<updatedBy>.*)\t(?<updatedAt>.*)\t\d+\)\s+\"(?<name>.*)\":.*\d+.\d+.\d+' 
         | update updatedAt {into datetime}
     ) name
+}
+
+def safeParseInt [d:string] {try {$d | into int } catch {0}}
+
+def parseSemVer [version] {
+    const sem_ver_regex = '(?P<major>\d+)(\.(?P<minor>\d+)(\.(?P<patch>\d+))?)?';
+    let parsed = $version | parse --regex $sem_ver_regex | first;
+    {major: (safeParseInt $parsed.major), minor: (safeParseInt $parsed.minor), patch: (safeParseInt $parsed.patch) }
+}
+
+def color-version [current: string, latest: string] {
+    let current_parsed = parseSemVer $current 
+    let latest_parsed = parseSemVer $latest;
+
+    if ($current_parsed.major < $latest_parsed.major) {
+        if ($latest_parsed.major - $current_parsed.major > 1) {
+            return $"(ansi purple_bold)($current)(ansi reset)"
+        } else {
+            return $"(ansi red_bold)($current)(ansi reset)"
+        }
+    } else if ($current_parsed.minor != $latest_parsed.minor) {
+        return $"(ansi yellow_bold)($current)(ansi reset)"
+    } else {
+        return $"(ansi green)($current)(ansi reset)"
+    }
+}
+
+def all-npm-dependencies-with-latest [] {
+    let dependencies = all-npm-dependencies;
+    let latest_version = $dependencies | get name | par-each {|name| {name : $name, latest: (http get $"https://registry.npmjs.org/($name)" | | get dist-tags.latest) }}
+    $dependencies | join $latest_version name | update version {|row| color-version $row.version $row.latest};
 }
 
 alias yr = yarn run
